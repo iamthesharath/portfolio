@@ -381,7 +381,7 @@ footer{position:relative;z-index:50;border-top:1px solid var(--w05);padding:26px
 ═══════════════════════════════════════════ */
 const SEQ=[{name:'humanoid',total:123,imgs:[]},{name:'blast',total:123,imgs:[]}];
 const GRAND_TOTAL=246;
-const ZIN=0.17, ZOUT=0.30;
+const ZIN=0.083, ZOUT=0.22;
 
 /* DOM */
 const canvas=document.getElementById('canvas');
@@ -398,9 +398,9 @@ const ovAbout=document.getElementById('ov-about');
 
 /* Nav zone scroll targets */
 const ZONE_SCROLL={
-  projects: 0.44,
-  stack:    0.71,
-  about:    0.93
+  projects: 0.37,
+  stack:    0.65,
+  about:    0.89
 };
 document.querySelectorAll('[data-zone]').forEach(a=>{
   a.addEventListener('click',e=>{
@@ -592,10 +592,10 @@ function updateOvs(p,inZone){
     setOp(ovHero,0);setOp(ovProj,0);setOp(ovStack,0);setOp(ovAbout,0);
     return;
   }
-  setOp(ovHero,  fade(p, 0.00, 0.00, 0.11, 0.17));
-  setOp(ovProj,  fade(p, 0.32, 0.36, 0.52, 0.57));
-  setOp(ovStack, fade(p, 0.60, 0.64, 0.78, 0.83));
-  setOp(ovAbout, fade(p, 0.86, 0.90, 0.97, 1.00));
+  setOp(ovHero,  fade(p, 0.00, 0.00, 0.05, 0.083));
+  setOp(ovProj,  fade(p, 0.24, 0.28, 0.46, 0.51));
+  setOp(ovStack, fade(p, 0.54, 0.58, 0.73, 0.78));
+  setOp(ovAbout, fade(p, 0.82, 0.86, 0.96, 1.00));
 }
 
 /* Nav visibility — hide through early blast, fade back in at 0.72 */
