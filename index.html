@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHARATH — Creative Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050505;--blue:#0050FF;--cyan:#00D6FF;
+  --w:#fff;--w80:rgba(255,255,255,.8);--w60:rgba(255,255,255,.6);
+  --w30:rgba(255,255,255,.3);--w10:rgba(255,255,255,.1);--w05:rgba(255,255,255,.05);
+  --glass:rgba(255,255,255,.04);--gb:rgba(255,255,255,.08);
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* CANVAS */
+#canvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;display:block;transition:opacity .6s ease}
+
+/* GRAIN */
+#grain{position:fixed;inset:-50%;width:200%;height:200%;z-index:2;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain .4s steps(1) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-4%,-6%)}50%{transform:translate(-8%,4%)}75%{transform:translate(4%,-8%)}}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity 1s ease,visibility 1s ease}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.l-wm{font-size:11px;font-weight:700;letter-spacing:8px;color:var(--w30);text-transform:uppercase}
+.l-track{width:180px;height:1px;background:var(--w10);position:relative;overflow:hidden}
+.l-bar{position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.l-pct{font-size:10px;font-weight:700;letter-spacing:4px;color:var(--cyan)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(5,5,5,.65);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.08);opacity:0;transform:translateY(-8px);transition:opacity .6s,transform .6s}
+nav.show{opacity:1;transform:translateY(0)}
+.nav-logo{font-size:20px;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#fff 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;filter:drop-shadow(0 0 12px rgba(0,214,255,.35))}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);text-decoration:none;letter-spacing:.3px;transition:color .2s,text-shadow .2s}
+.nav-links a:hover{color:var(--w);text-shadow:0 0 12px rgba(0,214,255,.4)}
+.nav-cta{font-size:13px;font-weight:700;color:var(--w);text-decoration:none;padding:8px 22px;border-radius:100px;border:1px solid transparent;background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(135deg,var(--blue),var(--cyan)) border-box;transition:box-shadow .3s,transform .2s;letter-spacing:.2px}
+.nav-cta:hover{box-shadow:0 0 24px rgba(0,80,255,.5),0 0 48px rgba(0,214,255,.15);transform:scale(1.04)}
+
+/* SCROLL SPACE — 700vh drives all canvas + overlay sections */
+#scroll-space{height:700vh;position:relative;z-index:0;pointer-events:none}
+
+/* ── OVERLAYS (fixed over canvas) ── */
+.ov{position:fixed;inset:0;z-index:10;pointer-events:none;transition:opacity .6s ease}
+.ov>*{pointer-events:auto}
+
+/* HERO overlay */
+#ov-hero{display:flex;flex-direction:column;justify-content:flex-end;padding:0 52px 60px}
+
+.hero-tag{
+  font-size:10px;font-weight:700;letter-spacing:5px;color:var(--cyan);
+  text-transform:uppercase;margin-bottom:12px;
+}
+.hero-name{
+  font-size:clamp(68px,10vw,148px);font-weight:900;letter-spacing:-5px;line-height:.88;
+  background:linear-gradient(170deg,#fff 0%,#555 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sh{
+  position:absolute;right:52px;bottom:60px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+
+.sh-lbl{font-size:9px;font-weight:700;letter-spacing:4px;color:var(--w30);text-transform:uppercase;writing-mode:vertical-lr}
+.sh-line{width:1px;height:44px;background:linear-gradient(to bottom,var(--cyan),transparent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.2;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.2)}}
+
+/* PROJECTS overlay — right panel */
+#ov-projects{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:52px 52px 60px 0;gap:16px}
+.ov-sec-tag{font-size:13px;font-weight:700;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 20px rgba(0,214,255,.5)}
+.ov-sec-title{font-size:clamp(28px,3.5vw,48px);font-weight:900;letter-spacing:-2px;line-height:1;text-align:right;background:linear-gradient(170deg,#fff 0%,#666 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ov-proj{width:min(400px,44vw);padding:26px 28px;border-radius:16px;background:rgba(5,5,5,.75);border:1px solid var(--gb);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);text-decoration:none;color:var(--w);display:block;transition:border-color .3s,box-shadow .3s,transform .3s}
+.ov-proj:hover{border-color:rgba(0,80,255,.4);box-shadow:0 0 40px rgba(0,80,255,.14);transform:translateX(-4px)}
+.ov-proj-num{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--blue);text-transform:uppercase;margin-bottom:8px}
+.ov-proj-name{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.ov-proj-desc{font-size:13px;color:var(--w60);line-height:1.65;margin-bottom:14px}
+.ov-proj-tags{display:flex;flex-wrap:wrap;gap:6px}
+.ov-tag{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--cyan);padding:4px 10px;border-radius:4px;border:1px solid rgba(0,214,255,.2)}
+
+/* STACK overlay — right panel */
+#ov-stack{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:52px 52px 60px 0;gap:20px}
+.ov-stack-panel{width:min(440px,48vw);padding:28px 30px;border-radius:18px;background:rgba(5,5,5,.75);border:1px solid var(--gb);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.ov-stack-col-title{font-size:10px;font-weight:700;letter-spacing:4px;color:var(--blue);text-transform:uppercase;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--w10)}
+.ov-stack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px}
+.ov-sk-item{display:flex;align-items:center;gap:9px}
+.ov-sk-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);flex-shrink:0}
+.ov-sk-name{font-size:14px;font-weight:500}
+
+/* ABOUT overlay — bottom-left text */
+#ov-about{display:flex;flex-direction:column;justify-content:flex-end;padding:0 60px 72px}
+.ov-about-inner{max-width:620px}
+.ov-about-tag{font-size:13px;font-weight:700;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;margin-bottom:16px;text-shadow:0 0 20px rgba(0,214,255,.5)}
+.ov-about-title{font-size:clamp(30px,3.8vw,52px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:20px;background:linear-gradient(170deg,#fff 0%,#666 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ov-about-body{font-size:clamp(14px,1.5vw,17px);font-weight:400;color:var(--w60);line-height:1.8;margin-bottom:20px}
+.ov-about-body strong{color:var(--w);font-weight:600}
+.ov-about-vals{display:flex;flex-wrap:wrap;gap:10px}
+.ov-val{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--cyan);padding:6px 16px;border-radius:100px;border:1px solid rgba(0,214,255,.2);background:rgba(0,214,255,.04)}
+
+/* ── CONTACT SECTION ── */
+#contact{
+  position:relative;z-index:50;background:var(--bg);
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;gap:36px;padding:80px 52px;
+  border-top:1px solid var(--w05);overflow:hidden;
+}
+/* ambient glow orb */
+#contact::before{
+  content:'';position:absolute;
+  width:70vw;height:70vw;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,80,255,.09) 0%,rgba(0,214,255,.04) 40%,transparent 70%);
+  animation:ctglow 5s ease-in-out infinite;pointer-events:none;
+}
+@keyframes ctglow{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
+
+.ct-title{font-size:clamp(34px,5.5vw,82px);font-weight:900;letter-spacing:-3px;line-height:.95;position:relative;z-index:1}
+.ct-line1{display:block;background:linear-gradient(170deg,#fff 0%,#888 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ct-line2{display:block;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 28px rgba(0,214,255,.35))}
+
+.ct-sub{font-size:clamp(13px,1.4vw,16px);color:var(--w60);max-width:460px;line-height:1.8;position:relative;z-index:1}
+.ct-divider{width:60px;height:1px;background:linear-gradient(90deg,var(--blue),var(--cyan));position:relative;z-index:1}
+
+.ct-links{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.c-link{display:inline-flex;align-items:center;gap:9px;padding:14px 30px;border-radius:100px;font-size:13px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .3s;letter-spacing:.2px}
+.c-link.primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:var(--w)}
+.c-link.primary:hover{transform:scale(1.05);box-shadow:0 0 32px rgba(0,80,255,.55),0 0 60px rgba(0,214,255,.15)}
+.c-link.ghost{color:var(--w);border:1px solid var(--w30);background:rgba(255,255,255,.03);backdrop-filter:blur(8px)}
+.c-link.ghost:hover{border-color:rgba(0,214,255,.5);box-shadow:0 0 20px rgba(0,214,255,.1);transform:scale(1.03)}
+.c-link svg{width:16px;height:16px;fill:currentColor}
+
+/* FOOTER */
+footer{position:relative;z-index:50;border-top:1px solid var(--w05);padding:26px 52px;display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.ft-copy{font-size:11px;color:var(--w30)}
+.ft-soc{display:flex;gap:22px}
+.ft-soc a{font-size:11px;color:var(--w60);text-decoration:none;transition:color .2s}
+.ft-soc a:hover{color:var(--w)}
+
+@media(max-width:768px){
+  /* NAV */
+  nav{padding:0 20px;height:52px}
+  .nav-links{display:none}
+  .nav-logo{font-size:17px}
+
+  /* SCROLL SPACE — shorter on mobile */
+  #scroll-space{height:550vh}
+
+  /* HERO */
+  #ov-hero{padding:0 20px 44px}
+  .hero-name{font-size:clamp(56px,16vw,96px);letter-spacing:-3px}
+  .sh{right:20px;bottom:44px}
+
+  /* PROJECTS — bottom panel, full width */
+  #ov-projects{
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:stretch;
+    padding:0 0 52px;
+    gap:10px;
+    overflow:hidden;
+  }
+  .ov-sec-tag{padding:0 20px;font-size:11px}
+  .ov-sec-title{padding:0 20px;text-align:left;font-size:clamp(22px,6vw,32px)}
+  .ov-proj{
+    width:100%;border-radius:0;
+    border-left:none;border-right:none;border-bottom:none;
+    padding:18px 20px;
+  }
+  .ov-proj:hover{transform:none}
+  .ov-proj-name{font-size:16px}
+  .ov-proj-desc{font-size:12px}
+
+  /* STACK — bottom panel, full width */
+  #ov-stack{
+    justify-content:flex-end;
+    align-items:stretch;
+    padding:0 0 52px;
+    gap:10px;
+  }
+  .ov-stack-panel{
+    width:100%;border-radius:0;
+    border-left:none;border-right:none;border-bottom:none;
+    padding:16px 20px;
+  }
+  .ov-stack-col-title{font-size:9px;margin-bottom:10px;padding-bottom:8px}
+  .ov-stack-grid{gap:6px 12px}
+  .ov-sk-name{font-size:12px}
+
+  /* ABOUT — bottom, full width */
+  #ov-about{padding:0 20px 52px}
+  .ov-about-inner{max-width:100%}
+  .ov-about-title{font-size:clamp(24px,7vw,36px)}
+  .ov-about-body{font-size:14px}
+
+  /* CONTACT */
+  #contact{padding:72px 20px}
+  .ct-links{flex-direction:column;align-items:center;gap:10px}
+  .c-link{width:100%;max-width:320px;justify-content:center}
+
+  /* FOOTER */
+  footer{padding:22px 20px;flex-direction:column;gap:14px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="l-wm">Initializing</div>
+  <div class="l-track"><div class="l-bar" id="l-bar"></div></div>
+  <div class="l-pct" id="l-pct">0%</div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">SHARATH</div>
+  <ul class="nav-links">
+    <li><a href="#" data-zone="projects">Projects</a></li>
+    <li><a href="#" data-zone="stack">Tech Stack</a></li>
+    <li><a href="#" data-zone="about">About</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Contact</a>
+</nav>
+
+<!-- CANVAS + GRAIN -->
+<canvas id="canvas"></canvas>
+<div id="grain"></div>
+
+<!-- ── OVERLAY 1: HERO ── -->
+<div class="ov" id="ov-hero">
+  <div class="hero-tag">Creative Developer — Experience Architect</div>
+  <h1 class="hero-name">SHARATH</h1>
+  <div class="sh">
+    <span class="sh-lbl">Scroll</span>
+    <div class="sh-line"></div>
+  </div>
+</div>
+
+<!-- ── OVERLAY 2: PROJECTS ── -->
+<div class="ov" id="ov-projects">
+  <div class="ov-sec-tag">Selected Works</div>
+  <div class="ov-sec-title">Featured<br>Systems.</div>
+
+  <a class="ov-proj" id="proj1" href="#">
+    <div class="ov-proj-num">Project 01</div>
+    <div class="ov-proj-name">Smart Campus Connect</div>
+    <div class="ov-proj-desc">A unified platform connecting students, faculty and campus services through real-time data and AI.</div>
+    <div class="ov-proj-tags">
+      <span class="ov-tag">NEXT.JS</span><span class="ov-tag">AI</span><span class="ov-tag">NODE.JS</span>
+    </div>
+  </a>
+
+  <a class="ov-proj" id="proj2" href="#">
+    <div class="ov-proj-num">Project 02</div>
+    <div class="ov-proj-name">Humanoid AI OS Interface</div>
+    <div class="ov-proj-desc">Next-gen OS UI for humanoid robots fusing biometric data, AI cognition and real-time control.</div>
+    <div class="ov-proj-tags">
+      <span class="ov-tag">THREE.JS</span><span class="ov-tag">PYTHON</span><span class="ov-tag">WEBGL</span>
+    </div>
+  </a>
+
+  <a class="ov-proj" id="proj3" href="#">
+    <div class="ov-proj-num">Project 03</div>
+    <div class="ov-proj-name">AI ChatBot</div>
+    <div class="ov-proj-desc">Intelligent conversational AI with contextual memory, multi-modal inputs and enterprise API integrations.</div>
+    <div class="ov-proj-tags">
+      <span class="ov-tag">REACT</span><span class="ov-tag">GPT-4</span><span class="ov-tag">LANGCHAIN</span>
+    </div>
+  </a>
+</div>
+
+<!-- ── OVERLAY 3: STACK ── -->
+<div class="ov" id="ov-stack">
+  <div class="ov-sec-tag">Capabilities</div>
+  <div class="ov-sec-title" style="text-align:right">The Tech<br>Stack.</div>
+
+  <div class="ov-stack-panel">
+    <div class="ov-stack-col-title">Frontend & Animation</div>
+    <div class="ov-stack-grid">
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Next.js 14</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">React 18</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">GSAP</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Framer Motion</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Three.js</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">TypeScript</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Tailwind CSS</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">WebGL / Canvas</span></div>
+    </div>
+  </div>
+
+  <div class="ov-stack-panel">
+    <div class="ov-stack-col-title">AI, Backend & Tools</div>
+    <div class="ov-stack-grid">
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Python</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Node.js</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">OpenAI / LLMs</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">LangChain</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">PostgreSQL</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Figma</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Vercel / AWS</span></div>
+      <div class="ov-sk-item"><div class="ov-sk-dot"></div><span class="ov-sk-name">Git / GitHub</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY 4: ABOUT ── -->
+<div class="ov" id="ov-about">
+  <div class="ov-about-inner">
+    <div class="ov-about-tag">About</div>
+    <div class="ov-about-title">The Person<br>Behind the Code.</div>
+    <p class="ov-about-body">
+      I'm <strong>Sharath</strong> — a Creative Developer obsessed with building digital experiences at the intersection of <strong>design, motion and technology</strong>.<br><br>
+      I craft <strong>digital artifacts</strong> — high-fidelity, immersive experiences that feel alive. Scroll-driven narratives, 3D interfaces, AI-powered systems.
+    </p>
+    <div class="ov-about-vals">
+      <span class="ov-val">Motion First</span>
+      <span class="ov-val">Performance Obsessed</span>
+      <span class="ov-val">AI Native</span>
+      <span class="ov-val">Open Source</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 700VH CANVAS + OVERLAY SCROLL ZONE ══ -->
+<div id="scroll-space"></div>
+
+<!-- ══ CONTACT (only section below canvas) ══ -->
+<section id="contact">
+  <div class="ct-title">
+    <span class="ct-line1">Let's build something</span>
+    <span class="ct-line2">legendary.</span>
+  </div>
+  <div class="ct-divider"></div>
+  <p class="ct-sub">Open for freelance projects, collaborations and full-time roles. Let's make something extraordinary.</p>
+  <div class="ct-links">
+    <a class="c-link primary" href="mailto:iamthesharath@gmail.com">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      iamthesharath@gmail.com
+    </a>
+    <a class="c-link ghost" href="https://linkedin.com/in/YOUR-HANDLE" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9 17H6.5v-7H9v7zM7.7 8.7a1.4 1.4 0 110-2.8 1.4 1.4 0 010 2.8zM18 17h-2.5v-3.5c0-1-.4-1.5-1.1-1.5-.8 0-1.2.5-1.2 1.5V17H10.7v-7H13v1c.4-.6 1-1.2 2.2-1.2 1.6 0 2.8 1 2.8 3.2V17z"/></svg>
+      LinkedIn
+    </a>
+    <a class="c-link primary" href="https://instagram.com/_jsharath_" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      @_jsharath_
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="ft-copy">© 2025 Sharath. Crafted with precision.</span>
+  <div class="ft-soc">
+    <a href="https://instagram.com/_jsharath_" target="_blank">Instagram</a>
+    <a href="https://linkedin.com/in/YOUR-HANDLE" target="_blank">LinkedIn</a>
+    <a href="mailto:iamthesharath@gmail.com">Email</a>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONFIG
+   700vh scroll space
+   0–38%  : humanoid (123 frames)
+   38–48% : 3D parallax transition
+   48–100%: blast    (123 frames)
+
+   OVERLAY WINDOWS (within canvas zone):
+   Hero     0.00–0.35
+   Projects 0.50–0.70
+   Stack    0.72–0.88
+   About    0.90–1.00
+═══════════════════════════════════════════ */
+const SEQ=[{name:'humanoid',total:123,imgs:[]},{name:'blast',total:123,imgs:[]}];
+const GRAND_TOTAL=246;
+const ZIN=0.38, ZOUT=0.48;
+
+/* DOM */
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d',{alpha:false});
+const nav=document.getElementById('nav');
+const lBar=document.getElementById('l-bar');
+const lPct=document.getElementById('l-pct');
+const loader=document.getElementById('loader');
+const scrollSpace=document.getElementById('scroll-space');
+const ovHero=document.getElementById('ov-hero');
+const ovProj=document.getElementById('ov-projects');
+const ovStack=document.getElementById('ov-stack');
+const ovAbout=document.getElementById('ov-about');
+
+/* Nav zone scroll targets */
+const ZONE_SCROLL={
+  projects: 0.55,
+  stack:    0.77,
+  about:    0.94
+};
+document.querySelectorAll('[data-zone]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const target=ZONE_SCROLL[a.dataset.zone];
+    if(target===undefined) return;
+    const spaceH=scrollSpace.offsetHeight;
+    const maxS=spaceH-window.innerHeight;
+    const targetY=Math.round(target*maxS);
+    // Snap virtual scroll immediately so overlays appear at once
+    rawY=targetY; smoothY=targetY;
+    window.scrollTo({top:targetY,behavior:'instant'});
+  });
+});
+
+/* HD Canvas */
+let DPR=1;
+function resize(){
+  DPR=window.devicePixelRatio||1;
+  canvas.width=window.innerWidth*DPR;
+  canvas.height=window.innerHeight*DPR;
+  canvas.style.width=window.innerWidth+'px';
+  canvas.style.height=window.innerHeight+'px';
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+}
+window.addEventListener('resize',resize);resize();
+
+/* Helpers */
+function pad3(n){return String(n).padStart(3,'0')}
+function ready(img){return img&&img.complete&&img.naturalWidth>0}
+function smoothstep(t){return t*t*(3-2*t)}
+function setOp(el,v){el.style.opacity=v;el.style.pointerEvents=v>0.05?'auto':'none'}
+
+function blit(img,yOff,sc){
+  if(!ready(img))return;
+  sc=sc||1;
+  const base=Math.min(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
+  const s=base*sc,w=img.naturalWidth*s,h=img.naturalHeight*s;
+  ctx.drawImage(img,(canvas.width-w)/2,(canvas.height-h)/2+yOff,w,h);
+}
+function nearest(arr,total,idx){
+  idx=Math.max(0,Math.min(total-1,idx));
+  if(ready(arr[idx]))return arr[idx];
+  for(let d=1;d<total;d++){
+    if(idx-d>=0&&ready(arr[idx-d]))return arr[idx-d];
+    if(idx+d<total&&ready(arr[idx+d]))return arr[idx+d];
+  }
+  return null;
+}
+function vig(){
+  const cx=canvas.width/2,cy=canvas.height/2;
+  const g=ctx.createRadialGradient(cx,cy,Math.min(canvas.width,canvas.height)*.26,cx,cy,Math.max(canvas.width,canvas.height)*.72);
+  g.addColorStop(0,'rgba(5,5,5,0)');g.addColorStop(1,'rgba(5,5,5,.82)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+/* Preload */
+let loaded=0;
+function preload(){
+  SEQ.forEach((seq,si)=>{
+    for(let i=0;i<seq.total;i++){
+      const img=new Image(),ii=i;
+      seq.imgs[i]=img;
+      img.onload=img.onerror=function(){
+        loaded++;
+        const pct=Math.round((loaded/GRAND_TOTAL)*100);
+        lBar.style.width=pct+'%';lPct.textContent=pct+'%';
+        if(si===0&&ii===0&&ready(img)){ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);blit(img,0,1);vig();}
+        if(loaded===GRAND_TOTAL)onLoaded();
+      };
+      img.src=`${seq.name}/ezgif-frame-${pad3(i+1)}.jpg`;
+    }
+  });
+}
+function onLoaded(){setTimeout(()=>{loader.classList.add('done');setTimeout(runIntro,250);},400);}
+
+/* Intro */
+let introOK=false;const INTRO_MS=2800;
+function runIntro(){
+  const t0=performance.now();
+  (function frame(now){
+    const t=Math.min(1,(now-t0)/INTRO_MS);
+    if(t<0.25){
+      ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(Math.random()>.5){ctx.fillStyle=`rgba(0,214,255,${Math.random()*.2})`;ctx.fillRect(0,0,canvas.width,canvas.height);}
+      if(Math.random()>.65){ctx.fillStyle=`rgba(0,80,255,${Math.random()*.45})`;ctx.fillRect(0,Math.random()*canvas.height,canvas.width,1+Math.random()*4);}
+    }else if(t<0.72){
+      const sp=1-(t-0.25)/0.47;
+      const ri=Math.floor(Math.random()*SEQ[0].total);
+      const img=nearest(SEQ[0].imgs,SEQ[0].total,ri);
+      ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(img)blit(img,0,1);
+      const gi=nearest(SEQ[0].imgs,SEQ[0].total,Math.max(0,ri-Math.floor(sp*14)));
+      if(gi){ctx.save();ctx.globalAlpha=.28;ctx.globalCompositeOperation='screen';
+        const sc=Math.min(canvas.width/gi.naturalWidth,canvas.height/gi.naturalHeight);
+        const gw=gi.naturalWidth*sc,gh=gi.naturalHeight*sc,gx=(canvas.width-gw)/2,gy=(canvas.height-gh)/2;
+        ctx.drawImage(gi,gx-8*sp,gy,gw,gh);ctx.drawImage(gi,gx+8*sp,gy,gw,gh);ctx.restore();}
+      const bars=Math.floor(sp*12+1);
+      for(let b=0;b<bars;b++){
+        const by=Math.random()*canvas.height,bh=1+Math.random()*22,bx=(Math.random()-.5)*70*sp;
+        try{const sl=ctx.getImageData(0,by,canvas.width,bh);ctx.putImageData(sl,bx,by);}catch(e){}
+        ctx.fillStyle=`rgba(0,214,255,${Math.random()*.25})`;ctx.fillRect(0,by,canvas.width,bh);
+      }
+      vig();
+    }else if(t<0.90){
+      const conv=(t-0.72)/0.18,ease=1-Math.pow(1-conv,2);
+      const fi=Math.round((1-ease)*(SEQ[0].total-1));
+      const img=nearest(SEQ[0].imgs,SEQ[0].total,fi);
+      ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(img)blit(img,0,1);
+      if(Math.random()>.5){ctx.fillStyle=`rgba(0,214,255,${(1-conv)*.3})`;ctx.fillRect(0,Math.random()*canvas.height,canvas.width,2);}
+      vig();
+    }else{
+      const fl=(t-0.90)/0.10;
+      const img=nearest(SEQ[0].imgs,SEQ[0].total,0);
+      ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(img)blit(img,0,1);
+      if(fl<0.4){ctx.fillStyle=`rgba(255,255,255,${(1-fl/.4)*.9})`;ctx.fillRect(0,0,canvas.width,canvas.height);}
+      vig();
+    }
+    if(t<1){requestAnimationFrame(frame);}
+    else{
+      introOK=true;
+      nav.classList.add('show');
+      rawY=window.scrollY; smoothY=rawY;
+      // Show hero and fire scramble immediately — no scroll needed
+      ovHero.style.opacity='1';
+      ovHero.style.pointerEvents='auto';
+      heroHidden=false;
+      scramble(document.querySelector('.hero-name'),'SHARATH',1800);
+      requestAnimationFrame(loop);
+    }
+  })(performance.now());
+}
+
+/* Virtual scroll */
+let rawY=0,smoothY=0;
+window.addEventListener('scroll',()=>{rawY=window.scrollY;},{passive:true});
+
+function loop(){
+  smoothY+=(rawY-smoothY)*0.10;
+  if(Math.abs(rawY-smoothY)<0.3)smoothY=rawY;
+
+  const spaceH=scrollSpace.offsetHeight;
+  const maxSeq=spaceH-window.innerHeight;
+  const p=maxSeq>0?Math.max(0,Math.min(1,smoothY/maxSeq)):0;
+  const inZone=smoothY<spaceH-window.innerHeight+10;
+
+  canvas.style.opacity=inZone?'1':'0';
+  if(inZone)render(p);
+  updateOvs(p,inZone);
+  updateNav(p,inZone);
+  requestAnimationFrame(loop);
+}
+
+/* Render */
+function render(p){
+  ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(p<ZIN){
+    const fi=Math.round((p/ZIN)*(SEQ[0].total-1));
+    const img=nearest(SEQ[0].imgs,SEQ[0].total,fi);
+    if(img)blit(img,0,1);
+  }else if(p>ZOUT){
+    const fi=Math.round(((p-ZOUT)/(1-ZOUT))*(SEQ[1].total-1));
+    const img=nearest(SEQ[1].imgs,SEQ[1].total,fi);
+    if(img)blit(img,0,1);
+  }else{
+    const raw=(p-ZIN)/(ZOUT-ZIN),ease=smoothstep(raw);
+    const h0=nearest(SEQ[0].imgs,SEQ[0].total,SEQ[0].total-1);
+    const b0=nearest(SEQ[1].imgs,SEQ[1].total,0);
+    if(h0)blit(h0,-canvas.height*.12*ease,1-0.06*ease);
+    if(b0)blit(b0,canvas.height*(1-ease),1+0.05*(1-ease));
+  }
+  vig();
+}
+
+/* Overlay fade helper */
+function fade(p,a,b,c,d){
+  if(p<=a||p>=d)return 0;
+  if(p>=b&&p<=c)return 1;
+  if(p<b)return(p-a)/(b-a);
+  return 1-(p-c)/(d-c);
+}
+
+/* Update all overlays */
+function updateOvs(p,inZone){
+  if(!inZone){
+    setOp(ovHero,0);setOp(ovProj,0);setOp(ovStack,0);setOp(ovAbout,0);
+    return;
+  }
+  setOp(ovHero,  fade(p, 0.00, 0.00, 0.28, 0.36));
+  setOp(ovProj,  fade(p, 0.50, 0.55, 0.66, 0.70));
+  setOp(ovStack, fade(p, 0.72, 0.76, 0.84, 0.88));
+  setOp(ovAbout, fade(p, 0.90, 0.93, 0.97, 1.00));
+}
+
+/* Nav visibility — hide through early blast, fade back in at 0.72 */
+function updateNav(p,inZone){
+  if(!inZone){nav.style.opacity='1';nav.style.pointerEvents='auto';return;}
+  if(p>ZOUT && p<0.68){
+    nav.style.opacity='0'; nav.style.pointerEvents='none';
+  } else if(p>=0.68 && p<0.74){
+    /* smooth fade-in over a short window */
+    const t=(p-0.68)/0.06;
+    nav.style.opacity=String(t);
+    nav.style.pointerEvents=t>0.5?'auto':'none';
+  } else {
+    nav.style.opacity='1'; nav.style.pointerEvents='auto';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   HERO ENTRANCE — fires once after intro
+═══════════════════════════════════════════ */
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%▓█▒░';
+
+function scramble(el, finalText, ms) {
+  const t0 = performance.now();
+  (function tick(now) {
+    const t = Math.min(1, (now - t0) / ms);
+    let out = '';
+    for (let i = 0; i < finalText.length; i++) {
+      // Each character locks in staggered left→right
+      const lockAt = (i / finalText.length) * 0.60;
+      if (t >= lockAt + 0.40) {
+        out += finalText[i];
+      } else {
+        out += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      }
+    }
+    el.textContent = out;
+    if (t < 1) requestAnimationFrame(tick);
+    else el.textContent = finalText;
+  })(performance.now());
+}
+
+
+/* Init */
+ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
+[ovHero,ovProj,ovStack,ovAbout].forEach(el=>setOp(el,0));
+preload();
+</script>
+</body>
+</html>
